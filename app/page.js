@@ -132,7 +132,7 @@ export default function Home() {
 
               <span className="slug"> {item.slug} ({item.quantity} available for ₹{item.price})</span>
               <div className='mx-5'>
-                <button onClick={() => { buttonAction("minus", item.slug, item.quantity) }} disabled={loadingaction} className="subtract inline-block px-3 py-1 cursor-pointer bg-purple-500 text-white font-semibold rounded-lg shadow-md disabled:bg-purple-200"> - </button>
+                <button onClick={() => { buttonAction("minus", item.slug, item.quantity) }} disabled={loadingaction || item.quantity <= 0} className="subtract inline-block px-3 py-1 cursor-pointer bg-purple-500 text-white font-semibold rounded-lg shadow-md disabled:bg-purple-200"> - </button>
 
                 <span className="quantity inline-block  min-w-3 mx-3">{item.quantity}</span>
                 <button onClick={() => { buttonAction("plus", item.slug, item.quantity) }} disabled={loadingaction} className="add inline-block px-3 py-1 cursor-pointer bg-purple-500 text-white font-semibold rounded-lg shadow-md disabled:bg-purple-200">  + </button>
@@ -149,7 +149,7 @@ export default function Home() {
 
         <form>
           <div className="mb-4">
-            <label htmlFor="productName" className="block mb-2">Product Slug</label>
+            <label htmlFor="productName" className="block mb-2 ">Product Slug</label>
             <input value={productForm?.slug || ""} name='slug' onChange={handleChange} type="text" id="productName" className="w-full border border-gray-300 px-4 py-2" />
           </div>
 
@@ -159,7 +159,7 @@ export default function Home() {
           </div>
 
           <div className="mb-4">
-            <label htmlFor="price" className="block mb-2">Price</label>
+            <label htmlFor="price" className="block mb-2">Price of each unit</label>
             <input value={productForm?.price || ""} name='price' onChange={handleChange} type="number" id="price" className="w-full border border-gray-300 px-4 py-2" />
           </div>
 
@@ -178,7 +178,7 @@ export default function Home() {
             <tr>
               <th className="px-4 py-2">Product Name</th>
               <th className="px-4 py-2">Quantity</th>
-              <th className="px-4 py-2">Price</th>
+              <th className="px-4 py-2">Total Stock Price</th>
             </tr>
           </thead>
           <tbody>
@@ -186,7 +186,7 @@ export default function Home() {
               return <tr key={product.slug}>
                 <td className="border px-4 py-2">{product.slug}</td>
                 <td className="border px-4 py-2">{product.quantity}</td>
-                <td className="border px-4 py-2">₹{product.price}</td>
+                <td className="border px-4 py-2">₹{product.quantity * product.price}</td>
               </tr>
             })}
 
