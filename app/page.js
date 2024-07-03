@@ -2,7 +2,8 @@
 import Header from '@/components/Header'
 import Image from 'next/image'
 import { useState, useEffect } from 'react'
-
+import { ToastContainer, toast } from 'react-toastify'
+import 'react-toastify/dist/ReactToastify.css'
 
 export default function Home() {
   const [productForm, setProductForm] = useState({})
@@ -12,7 +13,6 @@ export default function Home() {
   const [loading, setLoading] = useState(false)
   const [loadingaction, setLoadingaction] = useState(false)
   const [dropdown, setDropdown] = useState([])
-
 
   useEffect(() => {
     // Fetch products on load 
@@ -24,15 +24,13 @@ export default function Home() {
     fetchProducts()
   }, [])
 
-
   const buttonAction = async (action, slug, initialQuantity) => {
     // Immediately change the quantity of the product with given slug in Products
     let index = products.findIndex((item) => item.slug == slug)
     let newProducts = JSON.parse(JSON.stringify(products))
     if (action == "plus") {
       newProducts[index].quantity = parseInt(initialQuantity) + 1
-    }
-    else {
+    } else {
       newProducts[index].quantity = parseInt(initialQuantity) - 1
     }
     setProducts(newProducts)
@@ -42,8 +40,7 @@ export default function Home() {
     let newDropdown = JSON.parse(JSON.stringify(dropdown))
     if (action == "plus") {
       newDropdown[indexdrop].quantity = parseInt(initialQuantity) + 1
-    }
-    else {
+    } else {
       newDropdown[indexdrop].quantity = parseInt(initialQuantity) - 1
     }
     setDropdown(newDropdown)
@@ -61,6 +58,14 @@ export default function Home() {
   }
 
   const addProduct = async (e) => {
+    e.preventDefault();
+
+    // Check if all required fields are filled
+    if (!productForm.slug || !productForm.quantity || !productForm.price) {
+      toast.error("All fields are required");
+      return;
+    }
+
     try {
       const response = await fetch('/api/product', {
         method: 'POST',
@@ -74,18 +79,21 @@ export default function Home() {
         // Product added successfully
         setAlert("Your Product has been added!")
         setProductForm({})
+        toast.success("Product added successfully!");
       } else {
         // Handle error case
         console.error('Error adding product');
+        toast.error("Error adding product");
       }
     } catch (error) {
       console.error('Error:', error);
+      toast.error("Error adding product");
     }
+
     // Fetch all the products again to sync back
     const response = await fetch('/api/product')
     let rjson = await response.json()
     setProducts(rjson.products)
-    e.preventDefault();
   }
 
   const handleChange = (e) => {
@@ -102,8 +110,7 @@ export default function Home() {
       let rjson = await response.json()
       setDropdown(rjson.products)
       setLoading(false)
-    }
-    else {
+    } else {
       setDropdown([])
     }
   }
@@ -112,6 +119,7 @@ export default function Home() {
     <>
       <Header />
       <div className="container mx-auto my-8">
+        <ToastContainer />
         <div className='text-green-800 text-center'>{alert}</div>
         <h1 className="text-3xl font-semibold mb-6">Search a Product</h1>
         <div className="flex mb-2">
@@ -123,76 +131,64 @@ export default function Home() {
             {/* Add more options as needed */}
           </select>
         </div>
-        {loading && <div className='flex justify-center items-center'> <img width={74} src="/loading.svg" alt="" /> </div>
-        }
+        {loading && <div className='flex justify-center items-center'> <img width={74} src="/loading.svg" alt="" /> </div>}
         <div className="dropcontainer absolute w-[72vw] border-1 bg-purple-100 rounded-md ">
-
-          {dropdown.map(item => {
-            return <div key={item.slug} className="container flex justify-between p-2 my-1 border-b-2">
-
+          {dropdown.map(item => (
+            <div key={item.slug} className="container flex justify-between p-2 my-1 border-b-2">
               <span className="slug"> {item.slug} ({item.quantity} available for ₹{item.price})</span>
               <div className='mx-5'>
                 <button onClick={() => { buttonAction("minus", item.slug, item.quantity) }} disabled={loadingaction || item.quantity <= 0} className="subtract inline-block px-3 py-1 cursor-pointer bg-purple-500 text-white font-semibold rounded-lg shadow-md disabled:bg-purple-200"> - </button>
-
-                <span className="quantity inline-block  min-w-3 mx-3">{item.quantity}</span>
-                <button onClick={() => { buttonAction("plus", item.slug, item.quantity) }} disabled={loadingaction} className="add inline-block px-3 py-1 cursor-pointer bg-purple-500 text-white font-semibold rounded-lg shadow-md disabled:bg-purple-200">  + </button>
-
+                <span className="quantity inline-block min-w-3 mx-3">{item.quantity}</span>
+                <button onClick={() => { buttonAction("plus", item.slug, item.quantity) }} disabled={loadingaction} className="add inline-block px-3 py-1 cursor-pointer bg-purple-500 text-white font-semibold rounded-lg shadow-md disabled:bg-purple-200"> + </button>
               </div>
             </div>
-          })}
+          ))}
         </div>
       </div>
 
-      {/* Display Current Stock  */}
+      {/* Display Current Stock */}
       <div className="container mx-auto my-8">
         <h1 className="text-3xl font-semibold mb-6">Add a Product</h1>
-
         <form>
           <div className="mb-4">
-            <label htmlFor="productName" className="block mb-2 ">Product Slug</label>
-            <input value={productForm?.slug || ""} name='slug' onChange={handleChange} type="text" id="productName" className="w-full border border-gray-300 px-4 py-2" />
+            <label htmlFor="productName" className="block mb-2">Product Slug</label>
+            <input value={productForm?.slug || ""} name='slug' onChange={handleChange} type="text" id="productName" className="w-full border border-gray-300 px-4 py-2" required />
           </div>
-
           <div className="mb-4">
             <label htmlFor="quantity" className="block mb-2">Quantity</label>
-            <input value={productForm?.quantity || ""} name='quantity' onChange={handleChange} type="number" id="quantity" className="w-full border border-gray-300 px-4 py-2" />
+            <input value={productForm?.quantity || ""} name='quantity' onChange={handleChange} type="number" id="quantity" className="w-full border border-gray-300 px-4 py-2" required />
           </div>
-
           <div className="mb-4">
             <label htmlFor="price" className="block mb-2">Price of each unit</label>
-            <input value={productForm?.price || ""} name='price' onChange={handleChange} type="number" id="price" className="w-full border border-gray-300 px-4 py-2" />
+            <input value={productForm?.price || ""} name='price' onChange={handleChange} type="number" id="price" className="w-full border border-gray-300 px-4 py-2" required />
           </div>
-
           <button onClick={addProduct} type="submit" className="bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded-lg shadow-md font-semibold">
             Add Product
           </button>
-
-
         </form>
       </div>
       <div className="container my-8 mx-auto">
         <h1 className="text-3xl font-semibold mb-6">Display Current Stock</h1>
-
         <table className="table-auto w-full">
           <thead>
             <tr>
               <th className="px-4 py-2">Product Name</th>
+              <th className="px-4 py-2">Price per unit</th>
               <th className="px-4 py-2">Quantity</th>
               <th className="px-4 py-2">Total Stock Price</th>
             </tr>
           </thead>
           <tbody>
-            {products.map(product => {
-              return <tr key={product.slug}>
+            {products.map(product => (
+              <tr key={product.slug}>
                 <td className="border px-4 py-2">{product.slug}</td>
-                <td className="border px-4 py-2">{product.quantity}</td>
-                <td className="border px-4 py-2">₹{product.quantity * product.price}</td>
+                <td className="border px-4 py-2">{product.price}</td>
+                <td className="border px-4 py-2">{product.quantity == 0 ? "Out of stock" : product.quantity}</td>
+                <td className="border px-4 py-2">₹{product.quantity == 0 ? "---" : product.quantity * product.price}</td>
               </tr>
-            })}
-
+            ))}
           </tbody>
         </table>
-
       </div>
     </>
   )
